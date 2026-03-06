@@ -1,4 +1,4 @@
 /target
 /result
-flake.lock
+/result-*
 .direnv/

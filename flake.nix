@@ -1,6 +1,7 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    # Pinned: needs Cargo 1.85+ (edition2024) and gcc < 15 (musl static libstdc++)
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -87,17 +88,34 @@ HOOK
           });
 
           # Static linux build (musl)
-          musl = pkgs.pkgsStatic.rustPlatform.buildRustPackage (commonEnv // {
+          musl = let
+            muslPkgs = pkgs.pkgsCross.musl64;
+            gccLib = "${muslPkgs.stdenv.cc.cc}/x86_64-unknown-linux-musl/lib";
+          in muslPkgs.rustPlatform.buildRustPackage (commonEnv // {
             pname = "${pname}-musl";
             inherit version;
             src = ./.;
             inherit cargoHash;
 
             nativeBuildInputs = commonNativeBuildInputs;
-            buildInputs = [ pkgs.pkgsStatic.libopus ];
+            buildInputs = [ muslPkgs.pkgsStatic.libopus ];
 
             CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
             PKG_CONFIG_ALL_STATIC = "1";
+
+            # Force fully static binary: shadow dynamic libstdc++/libgcc_s with
+            # linker scripts that redirect to static archives. This avoids the
+            # gcc 15 PIE/libstdc++.a incompatibility when using -static.
+            # See: https://github.com/NixOS/nixpkgs/issues/425367
+            preBuild = ''
+              OVERRIDE=$TMPDIR/force-static
+              mkdir -p $OVERRIDE
+              echo "INPUT(${gccLib}/libstdc++.a)" > $OVERRIDE/libstdc++.so
+              echo "INPUT(${gccLib}/libstdc++.a)" > $OVERRIDE/libstdc++.so.6
+              echo "INPUT(${gccLib}/libgcc_s.a)"  > $OVERRIDE/libgcc_s.so
+              echo "INPUT(${gccLib}/libgcc_s.a)"  > $OVERRIDE/libgcc_s.so.1
+              export CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-C target-feature=+crt-static -C relocation-model=static -C link-args=-L$OVERRIDE -C link-args=-lc"
+            '';
 
             meta = with pkgs.lib; {
               description = "Speech-to-text MCP server powered by whisper.cpp (musl static)";
