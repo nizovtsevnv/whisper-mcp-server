@@ -142,8 +142,11 @@ HOOK
             ];
 
             CARGO_BUILD_TARGET = "x86_64-pc-windows-gnu";
-            PKG_CONFIG_ALLOW_CROSS = "1";
             CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L ${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
+
+            env = {
+              PKG_CONFIG_ALLOW_CROSS = "1";
+            };
 
             meta = with pkgs.lib; {
               description = "Speech-to-text MCP server powered by whisper.cpp (Windows)";
