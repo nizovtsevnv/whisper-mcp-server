@@ -1,0 +1,4 @@
+/target
+/result
+flake.lock
+.direnv/
