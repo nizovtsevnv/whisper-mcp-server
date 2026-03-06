@@ -1,5 +1,9 @@
 # whisper-mcp-server
 
+[![CI](https://github.com/nizovtsevnv/whisper-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/nizovtsevnv/whisper-mcp-server/actions/workflows/ci.yml)
+[![Release](https://github.com/nizovtsevnv/whisper-mcp-server/actions/workflows/release.yml/badge.svg)](https://github.com/nizovtsevnv/whisper-mcp-server/actions/workflows/release.yml)
+[![Crate](https://img.shields.io/crates/v/whisper-mcp-server)](https://crates.io/crates/whisper-mcp-server)
+
 Speech-to-text MCP server powered by [whisper.cpp](https://github.com/ggerganov/whisper.cpp).
 
 Standalone binary that exposes a `transcribe` tool over MCP (Model Context Protocol) via stdio or HTTP transport using JSON-RPC 2.0.
@@ -39,6 +43,7 @@ Options:
   --host <HOST>          Host to bind HTTP server [default: 127.0.0.1]
   --port <PORT>          Port for HTTP server [default: 8080]
   --auth <TOKEN>         Bearer token for HTTP authentication (optional)
+  --version              Print version and exit
 ```
 
 ## Build
@@ -146,7 +151,7 @@ Request:
 
 Response:
 ```json
-{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"whisper-mcp-server","version":"0.1.0"}}}
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"whisper-mcp-server","version":"<version>"}}}
 ```
 
 ### List tools
@@ -192,7 +197,7 @@ Release targets:
 | `macos-arm64` | nix (default) | Apple Silicon |
 
 Release process:
-1. Create a git tag: `git tag v0.1.0 && git push --tags`
+1. Create a git tag: `git tag vX.Y.Z && git push --tags`
 2. CI builds binaries for all 6 targets (CPU builds via nix, CUDA via cargo)
 3. Create a GitHub release from the tag — CI attaches build artifacts automatically
 

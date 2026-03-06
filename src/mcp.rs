@@ -111,7 +111,7 @@ fn handle_initialize(request: &JsonRpcRequest) -> JsonRpcResponse {
             "capabilities": { "tools": {} },
             "serverInfo": {
                 "name": "whisper-mcp-server",
-                "version": "0.1.0"
+                "version": env!("CARGO_PKG_VERSION")
             }
         })),
         error: None,

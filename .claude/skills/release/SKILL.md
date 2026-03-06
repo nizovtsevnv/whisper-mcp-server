@@ -96,22 +96,30 @@ Then update Cargo.lock:
 nix develop -c cargo check
 ```
 
-Check if cargoHash needs update (if dependencies changed since last release):
+**Always** update cargoHash after version bump — the nix vendor hash changes even if dependencies didn't change, because the package version is part of the derivation.
+
+Run `nix build` to get the new hash from the error output:
 ```bash
-git diff ${last_tag}..HEAD -- Cargo.lock
+new_hash=$(nix build 2>&1 | grep "got:" | head -1 | sed 's/.*got: *//g' | tr -d ' ')
 ```
 
-If Cargo.lock changed, run:
+If `nix build` succeeds (no hash mismatch) — cargoHash is already correct, skip.
+If it fails with a hash mismatch — update `cargoHash` in `flake.nix` with the new hash using Edit, then verify with `nix build`.
+
+After updates, verify no old version is hardcoded anywhere it shouldn't be:
 ```bash
-./scripts/update-cargo-hash.sh
+grep -rn "OLD_VERSION" --include="*.rs" --include="*.toml" --include="*.md" --include="*.yml" --exclude-dir=target .
 ```
 
-This may take a while as it rebuilds via nix. If the script reports "No hash update needed", continue.
+Expected matches (ignore these):
+- `Cargo.toml` — source of truth
+- `Cargo.lock` — auto-updated
+- `CHANGELOG.md` — release history (old versions are fine)
 
-After updates, verify no old version remains:
-```bash
-grep -rn "OLD_VERSION" --include="*.toml" --exclude-dir=target .
-```
+Unexpected matches to **fix**:
+- `.rs` files — use `env!("CARGO_PKG_VERSION")` instead of hardcoded strings
+- `.yml` CI files — should not contain version numbers
+- `README.md` — use `<version>` placeholder in protocol examples, not a real version
 
 ### Step 6: CHANGELOG.md
 

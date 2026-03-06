@@ -136,7 +136,7 @@ jobs:
         with:
           cuda: '12.6.3'
           method: network
-          sub-packages: '["nvcc", "cudart-dev", "cublas-dev"]'
+          sub-packages: '["nvcc", "cudart-dev", "libcublas-dev"]'
 
       - name: Install system dependencies
         run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev libopus-dev
