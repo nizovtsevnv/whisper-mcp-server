@@ -41,6 +41,9 @@
 
         commonEnv = {
           LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+          # CMake 4.x removed compat with cmake_minimum_required < 3.5;
+          # audiopus_sys bundles an old opus CMakeLists.txt that needs this.
+          CMAKE_POLICY_VERSION_MINIMUM = "3.5";
         };
       in {
         devShells.default = pkgs.mkShell {
