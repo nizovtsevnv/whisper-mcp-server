@@ -20,10 +20,6 @@ struct Args {
     #[arg(long, default_value = "auto")]
     language: String,
 
-    /// Device: "cpu" or "cuda"
-    #[arg(long, default_value = "cpu")]
-    device: String,
-
     /// Number of inference threads
     #[arg(long, default_value_t = 4)]
     threads: i32,

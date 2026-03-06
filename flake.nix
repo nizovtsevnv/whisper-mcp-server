@@ -13,6 +13,10 @@
       let
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs { inherit system overlays; };
+        cudaPkgs = import nixpkgs {
+          inherit system overlays;
+          config.allowUnfree = true;
+        };
 
         cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
         pname = cargoToml.package.name;
@@ -97,6 +101,30 @@ HOOK
 
             meta = with pkgs.lib; {
               description = "Speech-to-text MCP server powered by whisper.cpp (musl static)";
+              license = licenses.mit;
+            };
+          });
+
+          # CUDA build (requires unfree NVIDIA packages)
+          cuda = cudaPkgs.rustPlatform.buildRustPackage (commonEnv // {
+            pname = "${pname}-cuda";
+            inherit version;
+            src = ./.;
+            inherit cargoHash;
+
+            buildFeatures = [ "cuda" ];
+
+            nativeBuildInputs = commonNativeBuildInputs ++ [
+              cudaPkgs.cudaPackages.cuda_nvcc
+            ];
+            buildInputs = [
+              cudaPkgs.libopus
+              cudaPkgs.cudaPackages.cuda_cudart
+              cudaPkgs.cudaPackages.libcublas
+            ];
+
+            meta = with cudaPkgs.lib; {
+              description = "Speech-to-text MCP server powered by whisper.cpp (CUDA)";
               license = licenses.mit;
             };
           });

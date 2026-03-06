@@ -34,7 +34,6 @@ whisper-mcp-server --model <PATH> [OPTIONS]
 Options:
   --model <PATH>         Path to whisper model file (.bin) [required]
   --language <LANG>      Language for recognition (ISO 639-1, or "auto") [default: auto]
-  --device <DEVICE>      Device: "cpu" or "cuda" [default: cpu]
   --threads <N>          Number of inference threads [default: 4]
   --transport <MODE>     Transport mode: stdio or http [default: stdio]
   --host <HOST>          Host to bind HTTP server [default: 127.0.0.1]
@@ -61,10 +60,16 @@ The resulting binary at `target/x86_64-unknown-linux-musl/release/whisper-mcp-se
 
 ### CUDA build
 
-CUDA requires glibc — use the default target:
+CUDA requires glibc and NVIDIA CUDA toolkit (nvcc, cudart, cuBLAS):
 
 ```bash
 cargo build --release --features cuda
+```
+
+With Nix (requires unfree packages):
+
+```bash
+nix build .#cuda
 ```
 
 ## Runtime Dependencies
@@ -173,11 +178,22 @@ Response:
 GitHub Actions workflows:
 
 - **CI** (`ci.yml`) — runs `cargo fmt`, `cargo clippy`, `cargo test` on every push/PR to `main`/`develop`
-- **Release** (`release.yml`) — builds static binaries for 5 targets on tag push (`v*`), uploads as release assets
+- **Release** (`release.yml`) — builds binaries for 6 targets on tag push (`v*`), uploads as release assets
+
+Release targets:
+
+| Artifact | Build method | Notes |
+|---|---|---|
+| `linux-x86_64` | nix (default) | glibc, CPU only |
+| `linux-x86_64-musl` | nix (musl) | Static binary, CPU only |
+| `linux-x86_64-cuda` | cargo + CUDA toolkit | glibc, GPU acceleration |
+| `windows-x86_64` | nix (windows) | MinGW cross-compilation |
+| `macos-x86_64` | nix (default) | Intel Mac |
+| `macos-arm64` | nix (default) | Apple Silicon |
 
 Release process:
 1. Create a git tag: `git tag v0.1.0 && git push --tags`
-2. CI builds binaries for linux (glibc, musl), windows, macOS (x86_64, arm64)
+2. CI builds binaries for all 6 targets (CPU builds via nix, CUDA via cargo)
 3. Create a GitHub release from the tag — CI attaches build artifacts automatically
 
 To update `cargoHash` in `flake.nix` after changing dependencies:
@@ -187,7 +203,7 @@ To update `cargoHash` in `flake.nix` after changing dependencies:
 
 ## Usage
 
-### Claude Desktop
+### Claude Desktop (stdio)
 
 Add to `claude_desktop_config.json`:
 
@@ -202,6 +218,14 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
-### Any MCP client
+### HTTP mode
+
+```bash
+whisper-mcp-server --model /path/to/ggml-base.bin --transport http --port 8080 --token mytoken
+```
+
+Connect any HTTP-capable MCP client to `http://127.0.0.1:8080/mcp`. All requests require `Authorization: Bearer mytoken` and `Content-Type: application/json`. See [HTTP Transport](#http-transport) for protocol details.
+
+### Any MCP client (stdio)
 
 The server reads JSON-RPC requests from stdin and writes responses to stdout. Logs go to stderr. Connect any MCP-compatible client using stdio transport.
