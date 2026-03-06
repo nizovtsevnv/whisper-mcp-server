@@ -14,7 +14,7 @@ struct AppState {
     whisper_ctx: Arc<WhisperContext>,
     language: String,
     threads: i32,
-    token: Option<String>,
+    auth_token: Option<String>,
     sessions: Mutex<HashSet<String>>,
 }
 
@@ -22,7 +22,7 @@ pub async fn run_http_server(
     ctx: Arc<WhisperContext>,
     host: &str,
     port: u16,
-    token: Option<String>,
+    auth_token: Option<String>,
     language: &str,
     threads: i32,
 ) {
@@ -30,7 +30,7 @@ pub async fn run_http_server(
         whisper_ctx: ctx,
         language: language.to_string(),
         threads,
-        token,
+        auth_token,
         sessions: Mutex::new(HashSet::new()),
     });
 
@@ -49,7 +49,7 @@ pub async fn run_http_server(
 }
 
 fn check_auth(state: &AppState, headers: &HeaderMap) -> Result<(), StatusCode> {
-    let expected = match &state.token {
+    let expected = match &state.auth_token {
         Some(t) => t,
         None => return Ok(()),
     };

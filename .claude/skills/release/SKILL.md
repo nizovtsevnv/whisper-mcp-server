@@ -126,7 +126,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ```
 
-Generate a new section from step 2 analysis:
+Generate a new section from step 2 analysis. **IMPORTANT**: the changelog MUST cover ALL commits since the last tag (or since the first commit if no tags exist) AND any uncommitted changes. Do not limit the changelog to only uncommitted changes — include every meaningful commit from the range collected in step 2.
 
 ```markdown
 ## [vX.Y.Z] - YYYY-MM-DD

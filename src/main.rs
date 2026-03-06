@@ -10,7 +10,7 @@ mod mcp;
 mod transcribe;
 
 #[derive(Parser)]
-#[command(name = "whisper-mcp-server")]
+#[command(name = "whisper-mcp-server", version)]
 struct Args {
     /// Path to whisper model file (.bin)
     #[arg(long)]
@@ -38,7 +38,7 @@ struct Args {
 
     /// Bearer token for HTTP authentication (http transport only)
     #[arg(long)]
-    token: Option<String>,
+    auth: Option<String>,
 }
 
 fn main() {
@@ -70,7 +70,7 @@ fn main() {
                 ctx,
                 &args.host,
                 args.port,
-                args.token,
+                args.auth,
                 &args.language,
                 args.threads,
             ));

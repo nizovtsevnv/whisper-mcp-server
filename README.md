@@ -38,7 +38,7 @@ Options:
   --transport <MODE>     Transport mode: stdio or http [default: stdio]
   --host <HOST>          Host to bind HTTP server [default: 127.0.0.1]
   --port <PORT>          Port for HTTP server [default: 8080]
-  --token <TOKEN>        Bearer token for HTTP authentication (optional)
+  --auth <TOKEN>         Bearer token for HTTP authentication (optional)
 ```
 
 ## Build
@@ -104,10 +104,10 @@ The server supports two transport modes:
 Start the server in HTTP mode:
 
 ```bash
-whisper-mcp-server --model ggml-base.bin --transport http --port 8080 --token secret123
+whisper-mcp-server --model ggml-base.bin --transport http --port 8080 --auth secret123
 ```
 
-**Authentication**: when `--token` is set, all requests must include `Authorization: Bearer <token>`. Without `--token`, authentication is disabled.
+**Authentication**: when `--auth` is set, all requests must include `Authorization: Bearer <token>`. Without `--auth`, authentication is disabled.
 
 **Sessions**: the `initialize` request returns an `Mcp-Session-Id` header. All subsequent requests must include this header. Sessions are terminated via `DELETE /mcp`.
 
@@ -221,7 +221,7 @@ Add to `claude_desktop_config.json`:
 ### HTTP mode
 
 ```bash
-whisper-mcp-server --model /path/to/ggml-base.bin --transport http --port 8080 --token mytoken
+whisper-mcp-server --model /path/to/ggml-base.bin --transport http --port 8080 --auth mytoken
 ```
 
 Connect any HTTP-capable MCP client to `http://127.0.0.1:8080/mcp`. All requests require `Authorization: Bearer mytoken` and `Content-Type: application/json`. See [HTTP Transport](#http-transport) for protocol details.
