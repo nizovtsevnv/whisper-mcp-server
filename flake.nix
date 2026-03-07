@@ -168,8 +168,9 @@ HOOK
             CARGO_BUILD_TARGET = "x86_64-pc-windows-gnu";
             CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L ${winPkgs.windows.pthreads}/lib";
 
-            # Provide mingw headers to bindgen so it can generate correct bindings
-            BINDGEN_EXTRA_CLANG_ARGS = "--target=x86_64-w64-mingw32 -isystem ${cc.libc.dev}/include";
+            # Provide mingw headers to bindgen for correct Windows bindings.
+            # Use target-specific var to avoid affecting host-side builds.
+            BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu = "--target=x86_64-w64-mingw32 -isystem ${cc.libc.dev}/include -isystem ${cc.cc}/lib/gcc/x86_64-w64-mingw32/15.2.0/include";
 
             env = {
               PKG_CONFIG_ALLOW_CROSS = "1";

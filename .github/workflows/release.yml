@@ -90,9 +90,9 @@ jobs:
         run: |
           echo "Building for target: ${{ matrix.target }}"
           if [ "${{ matrix.nix-package }}" = "default" ]; then
-            nix build .
+            nix build . 2>&1 || { nix log .#default 2>/dev/null | tail -100; exit 1; }
           else
-            nix build .#${{ matrix.nix-package }}
+            nix build .#${{ matrix.nix-package }} 2>&1 || { nix log .#${{ matrix.nix-package }} 2>/dev/null | tail -100; exit 1; }
           fi
 
       - name: Prepare artifacts
