@@ -27,11 +27,6 @@ jobs:
             nix-package: musl
             binary: whisper-mcp-server
             os: ubuntu-latest
-          - target: x86_64-pc-windows-gnu
-            name: windows-x86_64
-            nix-package: windows
-            binary: whisper-mcp-server.exe
-            os: ubuntu-latest
           - target: x86_64-apple-darwin
             name: macos-x86_64
             nix-package: default
@@ -98,19 +93,14 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p artifacts
-
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-gnu" ]; then
-            cp result/bin/whisper-mcp-server.exe artifacts/whisper-mcp-server.exe
-          else
-            cp result/bin/whisper-mcp-server artifacts/whisper-mcp-server
-            chmod +x artifacts/whisper-mcp-server
-          fi
+          cp result/bin/whisper-mcp-server artifacts/whisper-mcp-server
+          chmod +x artifacts/whisper-mcp-server
 
           cd artifacts
           if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum ${{ matrix.binary }} > ${{ matrix.binary }}.sha256
+            sha256sum whisper-mcp-server > whisper-mcp-server.sha256
           elif command -v shasum >/dev/null 2>&1; then
-            shasum -a 256 ${{ matrix.binary }} > ${{ matrix.binary }}.sha256
+            shasum -a 256 whisper-mcp-server > whisper-mcp-server.sha256
           else
             echo "No SHA256 utility found" >&2
             exit 1
@@ -120,6 +110,55 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: whisper-mcp-server-${{ matrix.name }}
+          path: artifacts/
+          retention-days: 30
+
+  build-windows:
+    name: Build (windows-x86_64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: choco install cmake pkgconfiglite opus -y
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: windows-cargo-
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target/
+          key: windows-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: windows-target-
+
+      - name: Build binary
+        run: cargo build --release
+
+      - name: Prepare artifacts
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cp target/release/whisper-mcp-server.exe artifacts/
+          cd artifacts
+          sha256sum whisper-mcp-server.exe > whisper-mcp-server.exe.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: whisper-mcp-server-windows-x86_64
           path: artifacts/
           retention-days: 30
 
@@ -185,7 +224,7 @@ jobs:
 
   release:
     name: Upload Release Assets
-    needs: [build, build-cuda]
+    needs: [build, build-windows, build-cuda]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -228,7 +267,7 @@ jobs:
 
   publish:
     name: Publish to crates.io
-    needs: [build, build-cuda]
+    needs: [build, build-windows, build-cuda]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:

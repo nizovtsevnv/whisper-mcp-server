@@ -150,37 +150,9 @@ HOOK
             };
           });
 
-          # Windows cross-compilation
-          windows = let
-            winPkgs = pkgs.pkgsCross.mingwW64;
-            cc = winPkgs.stdenv.cc;
-          in winPkgs.rustPlatform.buildRustPackage (commonEnv // {
-            pname = "${pname}-windows";
-            inherit version;
-            src = ./.;
-            inherit cargoHash;
-
-            nativeBuildInputs = commonNativeBuildInputs;
-            buildInputs = [
-              winPkgs.windows.pthreads
-            ];
-
-            CARGO_BUILD_TARGET = "x86_64-pc-windows-gnu";
-            CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L ${winPkgs.windows.pthreads}/lib";
-
-            # Provide mingw headers to bindgen for correct Windows bindings.
-            # Use target-specific var to avoid affecting host-side builds.
-            BINDGEN_EXTRA_CLANG_ARGS_x86_64_pc_windows_gnu = "--target=x86_64-w64-mingw32 -isystem ${cc.libc.dev}/include -isystem ${cc.cc}/lib/gcc/x86_64-w64-mingw32/15.2.0/include";
-
-            env = {
-              PKG_CONFIG_ALLOW_CROSS = "1";
-            };
-
-            meta = with pkgs.lib; {
-              description = "Speech-to-text MCP server powered by whisper.cpp (Windows)";
-              license = licenses.mit;
-            };
-          });
+          # Note: Windows build uses cargo directly in CI (cross-compilation
+          # via nix has unresolved bindgen/cmake compatibility issues with
+          # mingw and gcc 15). See .github/workflows/release.yml
         };
       }
     );
