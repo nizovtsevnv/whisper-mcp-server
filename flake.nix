@@ -169,7 +169,7 @@ HOOK
             CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L ${winPkgs.windows.pthreads}/lib";
 
             # Provide mingw headers to bindgen so it can generate correct bindings
-            BINDGEN_EXTRA_CLANG_ARGS = "--sysroot=${cc.cc}/x86_64-w64-mingw32 -idirafter ${cc.cc}/x86_64-w64-mingw32/include";
+            BINDGEN_EXTRA_CLANG_ARGS = "--target=x86_64-w64-mingw32 -isystem ${cc.libc.dev}/include";
 
             env = {
               PKG_CONFIG_ALLOW_CROSS = "1";
