@@ -146,6 +146,8 @@ jobs:
 
       - name: Build binary
         run: cargo build --release
+        env:
+          CMAKE_POLICY_VERSION_MINIMUM: "3.5"
 
       - name: Prepare artifacts
         shell: bash
